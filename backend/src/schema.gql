@@ -1,0 +1,311 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type AuthResponse {
+  accessToken: String!
+  user: User!
+}
+
+input CreateDonationInput {
+  category: FoodCategory!
+  description: String!
+  expiryDeadline: DateTime!
+  foodName: String!
+  imageUrl: String
+  pickupAvailableTime: String!
+  pickupDeadline: DateTime!
+  pickupLocation: String!
+  quantity: Float!
+  storageNotes: String
+  unit: String!
+}
+
+input CreateRequestInput {
+  deliveryAddress: String!
+  donationId: ID!
+  notes: String
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Delivery {
+  confirmedAt: DateTime
+  createdAt: DateTime!
+  id: ID!
+  proofNotes: String
+  recipientConfirmation: Boolean!
+  taskId: String!
+}
+
+type Donation {
+  category: FoodCategory!
+  createdAt: DateTime!
+  currentRequest: DonationRequest
+  currentTask: PickupTask
+  description: String!
+  donor: User
+  donorId: String!
+  expiryDeadline: DateTime!
+  foodName: String!
+  id: ID!
+  imageUrl: String
+  pickupAvailableTime: String!
+  pickupDeadline: DateTime!
+  pickupLocation: String!
+  pickupTasks: [PickupTask]
+  quantity: Float!
+  requests: [DonationRequest]
+  status: DonationStatus!
+  storageNotes: String
+  unit: String!
+  updatedAt: DateTime!
+}
+
+type DonationRequest {
+  createdAt: DateTime!
+  deliveryAddress: String!
+  donationId: String!
+  id: ID!
+  notes: String
+  receiver: User
+  receiverId: String!
+  status: RequestStatus!
+  updatedAt: DateTime!
+}
+
+"""Lifecycle status of a food donation"""
+enum DonationStatus {
+  AVAILABLE
+  CANCELLED
+  COMPLETED
+  DELIVERED
+  PICKED_UP
+  PICKUP_ASSIGNED
+  REQUESTED
+}
+
+type DonorStats {
+  activeDonations: Int!
+  completedDonations: Int!
+  pendingRequests: Int!
+  totalDonations: Int!
+  totalMealsSaved: Int!
+}
+
+"""Category of surplus food item"""
+enum FoodCategory {
+  BAKERY
+  BEVERAGES
+  COOKED_MEALS
+  DAIRY_EGGS
+  OTHER
+  PACKAGED
+  PRODUCE
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type Mutation {
+  """Accept a pickup task for a surplus food donation"""
+  acceptPickup(donationId: ID!, notes: String): PickupTask!
+
+  """Cancel an active food donation"""
+  cancelDonation(id: ID!): Donation!
+
+  """Cancel an active pending food request"""
+  cancelRequest(id: ID!): DonationRequest!
+
+  """Confirm that food has been safely delivered to receiver"""
+  confirmDelivery(proofNotes: String, taskId: ID!): PickupTask!
+
+  """Receiver confirms receipt of delivered food, completing the journey"""
+  confirmReceipt(donationId: ID!, notes: String): Donation!
+
+  """Create a new surplus food donation"""
+  createDonation(input: CreateDonationInput!): Donation!
+
+  """Authenticate user and receive JWT access token"""
+  login(input: LoginInput!): AuthResponse!
+
+  """Register a new user (Donor, Volunteer, or Receiver)"""
+  register(input: RegisterInput!): AuthResponse!
+
+  """Request available surplus food for pickup and delivery"""
+  requestDonation(input: CreateRequestInput!): DonationRequest!
+
+  """Update an existing food donation"""
+  updateDonation(id: ID!, input: UpdateDonationInput!): Donation!
+
+  """Update pickup status (e.g. mark food PICKED_UP from donor)"""
+  updatePickupStatus(status: PickupStatus!, taskId: ID!): PickupTask!
+
+  """Update current user profile information"""
+  updateProfile(input: UpdateProfileInput!): User!
+}
+
+"""Status of a volunteer pickup task"""
+enum PickupStatus {
+  ASSIGNED
+  CANCELLED
+  DELIVERED
+  PICKED_UP
+}
+
+type PickupTask {
+  createdAt: DateTime!
+  deliveredAt: DateTime
+  delivery: Delivery
+  donationId: String!
+  id: ID!
+  notes: String
+  pickedUpAt: DateTime
+  status: PickupStatus!
+  updatedAt: DateTime!
+  volunteer: User
+  volunteerId: String!
+}
+
+type PlatformStats {
+  activeVolunteers: Int!
+  communityPartners: Int!
+  totalDonations: Int!
+  totalMealsRescued: Int!
+}
+
+type Query {
+  """Get all available surplus food donations for claim/pickup"""
+  availableDonations: [Donation!]!
+
+  """Get surplus food donations waiting for volunteer pickup assignment"""
+  availablePickupTasks: [Donation!]!
+
+  """Get a single food donation by ID with full lifecycle relations"""
+  donation(id: ID!): Donation!
+
+  """Get request details by ID"""
+  donationRequest(id: ID!): DonationRequest!
+
+  """Get all donations with optional filters"""
+  donations(category: FoodCategory, search: String, status: DonationStatus): [Donation!]!
+
+  """Get donor-specific dashboard statistics"""
+  donorStats: DonorStats!
+
+  """Get currently authenticated user profile"""
+  me: User!
+
+  """Get donations created by the currently authenticated donor"""
+  myDonations: [Donation!]!
+
+  """Get all requests made by the currently authenticated receiver"""
+  myRequests: [DonationRequest!]!
+
+  """Get completed tasks history for the current volunteer"""
+  myTaskHistory: [PickupTask!]!
+
+  """Get active pickup tasks assigned to the current volunteer"""
+  myTasks: [PickupTask!]!
+
+  """Get task details by ID"""
+  pickupTask(id: ID!): PickupTask!
+
+  """Get platform-wide sustainability impact statistics"""
+  platformStats: PlatformStats!
+
+  """Get receiver dashboard statistics"""
+  receiverStats: ReceiverStats!
+
+  """Get user details by ID"""
+  user(id: ID!): User!
+
+  """Get volunteer dashboard statistics"""
+  volunteerStats: VolunteerStats!
+}
+
+type ReceiverStats {
+  activeDeliveries: Int!
+  availableFood: Int!
+  completedRequests: Int!
+  pendingRequests: Int!
+}
+
+input RegisterInput {
+  address: String
+  city: String
+  email: String!
+  name: String!
+  organization: String
+  password: String!
+  phone: String
+  role: UserRole!
+  vehicleType: String
+}
+
+"""Status of a food donation request"""
+enum RequestStatus {
+  APPROVED
+  CANCELLED
+  FULFILLED
+  PENDING
+}
+
+input UpdateDonationInput {
+  category: FoodCategory
+  description: String
+  expiryDeadline: DateTime
+  foodName: String
+  imageUrl: String
+  pickupAvailableTime: String
+  pickupDeadline: DateTime
+  pickupLocation: String
+  quantity: Float
+  status: DonationStatus
+  storageNotes: String
+  unit: String
+}
+
+input UpdateProfileInput {
+  address: String
+  bio: String
+  city: String
+  name: String
+  organization: String
+  phone: String
+  vehicleType: String
+}
+
+type User {
+  address: String
+  bio: String
+  city: String
+  createdAt: DateTime!
+  email: String!
+  id: ID!
+  name: String!
+  organization: String
+  phone: String
+  role: UserRole!
+  updatedAt: DateTime!
+  vehicleType: String
+}
+
+"""User access role: DONOR, VOLUNTEER, or RECEIVER"""
+enum UserRole {
+  DONOR
+  RECEIVER
+  VOLUNTEER
+}
+
+type VolunteerStats {
+  activeTasks: Int!
+  availableTasks: Int!
+  completedPickups: Int!
+  todayTasks: Int!
+}

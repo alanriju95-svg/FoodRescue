@@ -1,0 +1,140 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  DONOR
+  VOLUNTEER
+  RECEIVER
+}
+
+enum FoodCategory {
+  COOKED_MEALS
+  BAKERY
+  PRODUCE
+  DAIRY_EGGS
+  PACKAGED
+  BEVERAGES
+  OTHER
+}
+
+enum DonationStatus {
+  AVAILABLE
+  REQUESTED
+  PICKUP_ASSIGNED
+  PICKED_UP
+  DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  FULFILLED
+  CANCELLED
+}
+
+enum PickupStatus {
+  ASSIGNED
+  PICKED_UP
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         UserRole
+  organization String?
+  address      String?
+  city         String?
+  bio          String?
+  vehicleType  String?   // For volunteers: Car, Bike, Van, Walk
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  donations        Donation[]
+  donationRequests DonationRequest[]
+  pickupTasks      PickupTask[]
+
+  @@map("users")
+}
+
+model Donation {
+  id                  String         @id @default(uuid())
+  donorId             String
+  donor               User           @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  foodName            String
+  description         String
+  category            FoodCategory
+  quantity            Float
+  unit                String         // meals, kg, boxes, portions
+  pickupLocation      String
+  pickupAvailableTime String
+  pickupDeadline      DateTime
+  expiryDeadline      DateTime
+  status              DonationStatus @default(AVAILABLE)
+  storageNotes        String?
+  imageUrl            String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  requests    DonationRequest[]
+  pickupTasks PickupTask[]
+
+  @@map("donations")
+}
+
+model DonationRequest {
+  id              String        @id @default(uuid())
+  donationId      String
+  donation        Donation      @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  receiverId      String
+  receiver        User          @relation(fields: [receiverId], references: [id], onDelete: Cascade)
+  deliveryAddress String
+  status          RequestStatus @default(PENDING)
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("donation_requests")
+}
+
+model PickupTask {
+  id          String       @id @default(uuid())
+  donationId  String
+  donation    Donation     @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  volunteerId String
+  volunteer   User         @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+  status      PickupStatus @default(ASSIGNED)
+  notes       String?
+  pickedUpAt  DateTime?
+  deliveredAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  delivery Delivery?
+
+  @@map("pickup_tasks")
+}
+
+model Delivery {
+  id                    String     @id @default(uuid())
+  taskId                String     @unique
+  task                  PickupTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  recipientConfirmation Boolean    @default(false)
+  confirmedAt           DateTime?
+  proofNotes            String?
+  createdAt             DateTime   @default(now())
+
+  @@map("deliveries")
+}
