@@ -17,16 +17,16 @@ export default function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        router.push('/login');
+        router.replace('/login');
       } else if (!allowedRoles.includes(user.role)) {
         // Redirect to their own dashboard
-        if (user.role === 'DONOR') router.push('/donor/dashboard');
-        else if (user.role === 'VOLUNTEER') router.push('/volunteer/dashboard');
-        else if (user.role === 'RECEIVER') router.push('/receiver/dashboard');
-        else router.push('/');
+        if (user.role === 'DONOR') router.replace('/donor/dashboard');
+        else if (user.role === 'VOLUNTEER') router.replace('/volunteer/dashboard');
+        else if (user.role === 'RECEIVER') router.replace('/receiver/dashboard');
+        else router.replace('/');
       }
     }
-  }, [user, isLoading, allowedRoles, router]);
+  }, [user, isLoading, allowedRoles.join(','), router]);
 
   if (isLoading || !user || !allowedRoles.includes(user.role)) {
     return (

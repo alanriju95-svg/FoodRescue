@@ -13,12 +13,12 @@ export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
 
   @Mutation(() => AuthResponse, { description: 'Register a new user (Donor, Volunteer, or Receiver)' })
-  async register(@Args('input') input: RegisterInput): Promise<AuthResponse> {
+  async register(@Args('input', { type: () => RegisterInput }) input: RegisterInput): Promise<AuthResponse> {
     return this.authService.register(input);
   }
 
   @Mutation(() => AuthResponse, { description: 'Authenticate user and receive JWT access token' })
-  async login(@Args('input') input: LoginInput): Promise<AuthResponse> {
+  async login(@Args('input', { type: () => LoginInput }) input: LoginInput): Promise<AuthResponse> {
     return this.authService.login(input);
   }
 

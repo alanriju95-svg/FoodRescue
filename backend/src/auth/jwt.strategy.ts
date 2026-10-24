@@ -6,10 +6,14 @@ import { PrismaService } from '../prisma/prisma.service.js';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly prisma: PrismaService) {
+    // By the time JwtStrategy is instantiated, ConfigModule has already
+    // loaded .env into process.env — safe to read here.
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'foodrescue_super_secure_jwt_secret_key_2026_antigravity',
+      secretOrKey:
+        process.env['JWT_SECRET'] ||
+        'foodrescue_super_secure_jwt_secret_key_2026_antigravity',
     });
   }
 

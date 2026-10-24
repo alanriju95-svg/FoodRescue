@@ -2,6 +2,7 @@ import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { PickupStatus } from '../../common/enums/index.js';
 import { User } from '../../users/models/user.model.js';
 import { Delivery } from '../../deliveries/models/delivery.model.js';
+import type { Donation } from '../../donations/models/donation.model.js';
 
 @ObjectType('PickupTask')
 export class PickupTask {
@@ -28,6 +29,8 @@ export class PickupTask {
 
   @Field(() => User, { nullable: true })
   volunteer?: User;
+
+  donation?: Donation;
 
   @Field(() => Delivery, { nullable: true })
   delivery?: Delivery | null;

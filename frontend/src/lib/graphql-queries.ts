@@ -428,6 +428,21 @@ export const CANCEL_REQUEST_MUTATION = `
   }
 `;
 
+export const ACCEPT_REQUEST_MUTATION = `
+  mutation AcceptRequest($requestId: ID!) {
+    acceptRequest(requestId: $requestId) {
+      id
+      status
+      deliveryAddress
+      notes
+      donation {
+        id
+        status
+      }
+    }
+  }
+`;
+
 export const GET_AVAILABLE_PICKUP_TASKS_QUERY = `
   query AvailablePickupTasks {
     availablePickupTasks {

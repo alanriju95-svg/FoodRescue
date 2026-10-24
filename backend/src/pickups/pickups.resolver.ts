@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, ID, ResolveField, Parent } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { PickupsService } from './pickups.service.js';
 import { PickupTask } from './models/pickup-task.model.js';
@@ -13,6 +13,14 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 @Resolver(() => PickupTask)
 export class PickupsResolver {
   constructor(private readonly pickupsService: PickupsService) {}
+
+  @ResolveField(() => Donation, { nullable: true })
+  async donation(@Parent() task: PickupTask & { donation?: Donation }): Promise<Donation | null> {
+    if (task.donation) {
+      return task.donation;
+    }
+    return this.pickupsService.getDonationForTask(task.donationId) as any;
+  }
 
   @Query(() => [Donation], { description: 'Get surplus food donations waiting for volunteer pickup assignment' })
   @UseGuards(GqlAuthGuard, RolesGuard)

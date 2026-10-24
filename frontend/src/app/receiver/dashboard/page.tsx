@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '../../../lib/auth-context';
 import RoleGuard from '../../../components/RoleGuard';
 import Sidebar from '../../../components/Sidebar';
 import PortalHeader from '../../../components/PortalHeader';
@@ -26,6 +27,7 @@ import {
 } from 'lucide-react';
 
 export default function ReceiverDashboardPage() {
+  const { user, isLoading } = useAuth();
   const [stats, setStats] = useState<ReceiverStats>({
     availableFood: 0,
     pendingRequests: 0,
@@ -59,8 +61,10 @@ export default function ReceiverDashboardPage() {
         setLoading(false);
       }
     }
-    loadReceiverData();
-  }, []);
+    if (!isLoading && user?.role === 'RECEIVER') {
+      loadReceiverData();
+    }
+  }, [user, isLoading]);
 
   const activeInTransit = requests.filter((r) =>
     ['REQUESTED', 'PICKUP_ASSIGNED', 'PICKED_UP', 'DELIVERED'].includes(r.donation?.status || '')
@@ -121,7 +125,10 @@ export default function ReceiverDashboardPage() {
               <div
                 className="card"
                 style={{
-                  background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)',
+                  background:
+                    activeInTransit[0].donation?.status === 'DELIVERED'
+                      ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)'
+                      : 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)',
                   color: '#ffffff',
                   padding: '1.75rem 2rem',
                   marginBottom: '2.5rem',
@@ -134,22 +141,26 @@ export default function ReceiverDashboardPage() {
               >
                 <div>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-full)', background: 'rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                    <Truck size={14} />
-                    <span>Incoming Food Delivery</span>
+                    {activeInTransit[0].donation?.status === 'DELIVERED' ? <CheckCircle2 size={14} /> : <Truck size={14} />}
+                    <span>{activeInTransit[0].donation?.status === 'DELIVERED' ? 'Courier Arrival Confirmed' : 'Incoming Food Delivery'}</span>
                   </div>
                   <h3 style={{ fontSize: '1.375rem', fontWeight: 800 }}>
                     {activeInTransit[0].donation?.foodName}
                   </h3>
-                  <p style={{ fontSize: '0.875rem', color: '#bfdbfe', marginTop: '0.25rem' }}>
+                  <p style={{ fontSize: '0.875rem', color: activeInTransit[0].donation?.status === 'DELIVERED' ? '#ecfdf5' : '#bfdbfe', marginTop: '0.25rem' }}>
                     Status: <strong>{activeInTransit[0].donation?.status.replace(/_/g, ' ')}</strong> • From: {activeInTransit[0].donation?.donor?.organization || 'Food Donor'}
                   </p>
                 </div>
                 <Link
                   href={`/receiver/requests/${activeInTransit[0].id}`}
                   className="btn"
-                  style={{ background: '#ffffff', color: '#1e3a8a', fontWeight: 700 }}
+                  style={{
+                    background: '#ffffff',
+                    color: activeInTransit[0].donation?.status === 'DELIVERED' ? '#065f46' : '#1e3a8a',
+                    fontWeight: 700,
+                  }}
                 >
-                  Track & Confirm Receipt →
+                  {activeInTransit[0].donation?.status === 'DELIVERED' ? '✓ Review & Confirm Receipt →' : 'Track & Confirm Receipt →'}
                 </Link>
               </div>
             )}

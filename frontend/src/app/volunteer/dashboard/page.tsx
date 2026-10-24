@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '../../../lib/auth-context';
 import RoleGuard from '../../../components/RoleGuard';
 import Sidebar from '../../../components/Sidebar';
 import PortalHeader from '../../../components/PortalHeader';
@@ -27,6 +28,7 @@ import {
 } from 'lucide-react';
 
 export default function VolunteerDashboardPage() {
+  const { user, isLoading } = useAuth();
   const [stats, setStats] = useState<VolunteerStats>({
     availableTasks: 0,
     activeTasks: 0,
@@ -61,8 +63,10 @@ export default function VolunteerDashboardPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!isLoading && user?.role === 'VOLUNTEER') {
+      loadData();
+    }
+  }, [user, isLoading]);
 
   const handleClaim = async (donationId: string) => {
     try {

@@ -12,7 +12,7 @@ async function main() {
   // 1. Create Users
   const donor1 = await prisma.user.upsert({
     where: { email: 'donor@foodrescue.org' },
-    update: {},
+    update: { passwordHash, role: UserRole.DONOR },
     create: {
       email: 'donor@foodrescue.org',
       passwordHash,
@@ -28,7 +28,7 @@ async function main() {
 
   const donor2 = await prisma.user.upsert({
     where: { email: 'bakery@foodrescue.org' },
-    update: {},
+    update: { passwordHash, role: UserRole.DONOR },
     create: {
       email: 'bakery@foodrescue.org',
       passwordHash,
@@ -44,7 +44,7 @@ async function main() {
 
   const volunteer = await prisma.user.upsert({
     where: { email: 'volunteer@foodrescue.org' },
-    update: {},
+    update: { passwordHash, role: UserRole.VOLUNTEER },
     create: {
       email: 'volunteer@foodrescue.org',
       passwordHash,
@@ -60,7 +60,7 @@ async function main() {
 
   const receiver = await prisma.user.upsert({
     where: { email: 'receiver@foodrescue.org' },
-    update: {},
+    update: { passwordHash, role: UserRole.RECEIVER },
     create: {
       email: 'receiver@foodrescue.org',
       passwordHash,

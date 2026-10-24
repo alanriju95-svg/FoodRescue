@@ -115,10 +115,18 @@ export default function AvailablePickupsPage() {
                           {item.pickupLocation}
                         </span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
                         <span style={{ color: 'var(--text-muted)' }}>Time Slot:</span>
                         <span style={{ color: '#d97706', fontWeight: 600 }}>{item.pickupAvailableTime}</span>
                       </div>
+                      {item.currentRequest && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.35rem', paddingTop: '0.35rem', borderTop: '1px dashed var(--border)' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Drop-Off Shelter:</span>
+                          <span style={{ fontWeight: 600, color: '#2563eb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }} title={item.currentRequest.receiver?.organization || item.currentRequest.receiver?.name || 'Shelter'}>
+                            {item.currentRequest.receiver?.organization || item.currentRequest.receiver?.name || 'Community Shelter'}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <button

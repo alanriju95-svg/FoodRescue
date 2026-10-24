@@ -21,7 +21,7 @@ export class UsersResolver {
   @UseGuards(GqlAuthGuard)
   async updateProfile(
     @CurrentUser() user: any,
-    @Args('input') input: UpdateProfileInput,
+    @Args('input', { type: () => UpdateProfileInput }) input: UpdateProfileInput,
   ): Promise<User> {
     const updated = await this.usersService.updateProfile(user.id, input);
     return updated as any;

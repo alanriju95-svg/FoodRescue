@@ -58,7 +58,7 @@ export class DonationsResolver {
   @Roles(UserRole.DONOR)
   async createDonation(
     @CurrentUser() user: any,
-    @Args('input') input: CreateDonationInput,
+    @Args('input', { type: () => CreateDonationInput }) input: CreateDonationInput,
   ): Promise<Donation> {
     return this.donationsService.create(user.id, input) as any;
   }
@@ -69,7 +69,7 @@ export class DonationsResolver {
   async updateDonation(
     @CurrentUser() user: any,
     @Args('id', { type: () => ID }) id: string,
-    @Args('input') input: UpdateDonationInput,
+    @Args('input', { type: () => UpdateDonationInput }) input: UpdateDonationInput,
   ): Promise<Donation> {
     return this.donationsService.update(user.id, id, input) as any;
   }

@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service.js';
@@ -11,12 +12,18 @@ import { RolesGuard } from './guards/roles.guard.js';
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'foodrescue_super_secure_jwt_secret_key_2026_antigravity',
-      signOptions: { expiresIn: '7d' },
+    // Use registerAsync so JWT_SECRET is read after ConfigModule has loaded .env
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET') || 'foodrescue_super_secure_jwt_secret_key_2026_antigravity',
+        signOptions: { expiresIn: '7d' },
+      }),
     }),
   ],
   providers: [AuthService, AuthResolver, JwtStrategy, GqlAuthGuard, RolesGuard],
   exports: [AuthService, GqlAuthGuard, RolesGuard, JwtModule, PassportModule],
 })
 export class AuthModule {}
+

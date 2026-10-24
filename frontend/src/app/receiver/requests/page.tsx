@@ -7,29 +7,46 @@ import Sidebar from '../../../components/Sidebar';
 import PortalHeader from '../../../components/PortalHeader';
 import StatusBadge from '../../../components/StatusBadge';
 import { executeGraphQL } from '../../../lib/graphql-client';
-import { GET_MY_REQUESTS_QUERY } from '../../../lib/graphql-queries';
+import { GET_MY_REQUESTS_QUERY, CONFIRM_RECEIPT_MUTATION } from '../../../lib/graphql-queries';
 import { DonationRequest } from '../../../types/index';
-import { Clock, MapPin, ArrowRight, Truck, UtensilsCrossed } from 'lucide-react';
+import { Clock, MapPin, ArrowRight, Truck, UtensilsCrossed, CheckCircle2 } from 'lucide-react';
 
 export default function ReceiverRequestsPage() {
   const [requests, setRequests] = useState<DonationRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+
+  const loadRequests = async () => {
+    try {
+      const res = await executeGraphQL<{ myRequests: DonationRequest[] }>(GET_MY_REQUESTS_QUERY);
+      if (res?.myRequests) {
+        setRequests(res.myRequests);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadRequests() {
-      try {
-        const res = await executeGraphQL<{ myRequests: DonationRequest[] }>(GET_MY_REQUESTS_QUERY);
-        if (res?.myRequests) {
-          setRequests(res.myRequests);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
     loadRequests();
   }, []);
+
+  const handleConfirmReceipt = async (donationId: string) => {
+    setConfirmingId(donationId);
+    try {
+      await executeGraphQL(CONFIRM_RECEIPT_MUTATION, {
+        donationId,
+        notes: 'Verified received in good condition.',
+      });
+      await loadRequests();
+    } catch (err: any) {
+      alert(err?.message || 'Confirmation failed');
+    } finally {
+      setConfirmingId(null);
+    }
+  };
 
   return (
     <RoleGuard allowedRoles={['RECEIVER']}>
@@ -97,7 +114,7 @@ export default function ReceiverRequestsPage() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                       <div style={{ textAlign: 'right' }}>
                         <span style={{ display: 'block', fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                           Quantity
@@ -106,6 +123,27 @@ export default function ReceiverRequestsPage() {
                           {req.donation?.quantity} {req.donation?.unit}
                         </strong>
                       </div>
+
+                      {req.donation?.status === 'DELIVERED' && (
+                        <button
+                          onClick={() => handleConfirmReceipt(req.donation!.id)}
+                          disabled={confirmingId === req.donation?.id}
+                          className="btn"
+                          style={{
+                            background: '#16a34a',
+                            color: '#ffffff',
+                            fontWeight: 700,
+                            padding: '0.55rem 1.1rem',
+                            fontSize: '0.875rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                          }}
+                        >
+                          <CheckCircle2 size={16} />
+                          <span>{confirmingId === req.donation?.id ? 'Confirming...' : '✓ Confirm Received'}</span>
+                        </button>
+                      )}
 
                       <Link
                         href={`/receiver/requests/${req.id}`}

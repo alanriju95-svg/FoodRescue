@@ -1,6 +1,7 @@
 import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { RequestStatus } from '../../common/enums/index.js';
 import { User } from '../../users/models/user.model.js';
+import type { Donation } from '../../donations/models/donation.model.js';
 
 @ObjectType('DonationRequest')
 export class DonationRequest {
@@ -24,6 +25,8 @@ export class DonationRequest {
 
   @Field(() => User, { nullable: true })
   receiver?: User;
+
+  donation?: Donation;
 
   @Field(() => Date)
   createdAt!: Date;

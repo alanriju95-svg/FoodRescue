@@ -8,7 +8,7 @@ import PortalHeader from '../../../../components/PortalHeader';
 import StatusBadge from '../../../../components/StatusBadge';
 import LifecycleStepper from '../../../../components/LifecycleStepper';
 import { executeGraphQL } from '../../../../lib/graphql-client';
-import { GET_DONATION_DETAIL_QUERY, CANCEL_DONATION_MUTATION } from '../../../../lib/graphql-queries';
+import { GET_DONATION_DETAIL_QUERY, CANCEL_DONATION_MUTATION, ACCEPT_REQUEST_MUTATION } from '../../../../lib/graphql-queries';
 import { Donation } from '../../../../types/index';
 import {
   ArrowLeft,
@@ -30,6 +30,7 @@ export default function DonationDetailPage({ params }: { params: Promise<{ id: s
 
   const [donation, setDonation] = useState<Donation | null>(null);
   const [loading, setLoading] = useState(true);
+  const [accepting, setAccepting] = useState(false);
 
   const fetchDetail = async () => {
     try {
@@ -47,6 +48,18 @@ export default function DonationDetailPage({ params }: { params: Promise<{ id: s
   useEffect(() => {
     fetchDetail();
   }, [id]);
+
+  const handleAcceptRequest = async (requestId: string) => {
+    setAccepting(true);
+    try {
+      await executeGraphQL(ACCEPT_REQUEST_MUTATION, { requestId });
+      await fetchDetail();
+    } catch (err: any) {
+      alert(err?.message || 'Failed to accept request');
+    } finally {
+      setAccepting(false);
+    }
+  };
 
   const handleCancel = async () => {
     if (!confirm('Are you sure you want to cancel this donation?')) return;
@@ -205,11 +218,25 @@ export default function DonationDetailPage({ params }: { params: Promise<{ id: s
 
                   {activeReq ? (
                     <div style={{ fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                      <div>
-                        <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Recipient Organization</span>
-                        <strong style={{ color: 'var(--text-main)' }}>
-                          {activeReq.receiver?.organization || activeReq.receiver?.name}
-                        </strong>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div>
+                          <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Recipient Organization</span>
+                          <strong style={{ color: 'var(--text-main)' }}>
+                            {activeReq.receiver?.organization || activeReq.receiver?.name}
+                          </strong>
+                        </div>
+                        <span
+                          style={{
+                            fontSize: '0.6875rem',
+                            fontWeight: 700,
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '4px',
+                            background: activeReq.status === 'APPROVED' ? '#dcfce7' : activeReq.status === 'PENDING' ? '#fef3c7' : '#f1f5f9',
+                            color: activeReq.status === 'APPROVED' ? '#15803d' : activeReq.status === 'PENDING' ? '#b45309' : '#475569',
+                          }}
+                        >
+                          Request: {activeReq.status}
+                        </span>
                       </div>
                       <div>
                         <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Delivery Drop-Off Location</span>
@@ -218,6 +245,31 @@ export default function DonationDetailPage({ params }: { params: Promise<{ id: s
                       {activeReq.notes && (
                         <div style={{ padding: '0.6rem', background: '#eff6ff', borderRadius: '6px', color: '#1e40af', fontSize: '0.8125rem' }}>
                           &ldquo;{activeReq.notes}&rdquo;
+                        </div>
+                      )}
+
+                      {/* Donor Acceptance Section */}
+                      {activeReq.status === 'PENDING' && (
+                        <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#fef3c7', borderRadius: '8px', border: '1px solid #fde68a' }}>
+                          <p style={{ fontSize: '0.8125rem', color: '#92400e', marginBottom: '0.5rem', fontWeight: 600 }}>
+                            🔔 This shelter has requested your surplus food. Accept to authorize volunteer pickup!
+                          </p>
+                          <button
+                            onClick={() => handleAcceptRequest(activeReq.id)}
+                            disabled={accepting}
+                            className="btn btn-primary btn-sm"
+                            style={{ background: '#059669', borderColor: '#059669', width: '100%', justifyContent: 'center' }}
+                          >
+                            <CheckCircle2 size={15} />
+                            <span>{accepting ? 'Accepting Request...' : '✓ Accept Request'}</span>
+                          </button>
+                        </div>
+                      )}
+
+                      {activeReq.status === 'APPROVED' && (
+                        <div style={{ marginTop: '0.4rem', padding: '0.5rem 0.75rem', background: '#ecfdf5', borderRadius: '6px', border: '1px solid #a7f3d0', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8125rem', color: '#065f46', fontWeight: 600 }}>
+                          <CheckCircle2 size={16} color="#059669" />
+                          <span>Request Accepted. Ready for courier pickup assignment!</span>
                         </div>
                       )}
                     </div>

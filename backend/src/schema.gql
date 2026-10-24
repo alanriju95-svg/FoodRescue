@@ -68,6 +68,7 @@ type Donation {
 type DonationRequest {
   createdAt: DateTime!
   deliveryAddress: String!
+  donation: Donation
   donationId: String!
   id: ID!
   notes: String
@@ -116,6 +117,9 @@ type Mutation {
   """Accept a pickup task for a surplus food donation"""
   acceptPickup(donationId: ID!, notes: String): PickupTask!
 
+  """Donor accepts an incoming food request from a receiver"""
+  acceptRequest(requestId: ID!): DonationRequest!
+
   """Cancel an active food donation"""
   cancelDonation(id: ID!): Donation!
 
@@ -162,6 +166,7 @@ type PickupTask {
   createdAt: DateTime!
   deliveredAt: DateTime
   delivery: Delivery
+  donation: Donation
   donationId: String!
   id: ID!
   notes: String

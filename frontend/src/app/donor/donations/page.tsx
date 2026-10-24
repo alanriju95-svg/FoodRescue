@@ -7,9 +7,9 @@ import Sidebar from '../../../components/Sidebar';
 import PortalHeader from '../../../components/PortalHeader';
 import StatusBadge from '../../../components/StatusBadge';
 import { executeGraphQL } from '../../../lib/graphql-client';
-import { GET_MY_DONATIONS_QUERY, CANCEL_DONATION_MUTATION } from '../../../lib/graphql-queries';
+import { GET_MY_DONATIONS_QUERY, CANCEL_DONATION_MUTATION, ACCEPT_REQUEST_MUTATION } from '../../../lib/graphql-queries';
 import { Donation, DonationStatus } from '../../../types/index';
-import { PlusCircle, Search, Filter, ArrowRight, Eye, Ban } from 'lucide-react';
+import { PlusCircle, Search, Filter, ArrowRight, Eye, Ban, CheckCircle2 } from 'lucide-react';
 
 export default function DonorDonationsPage() {
   const [donations, setDonations] = useState<Donation[]>([]);
@@ -17,6 +17,7 @@ export default function DonorDonationsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
 
   const loadDonations = async () => {
     try {
@@ -35,6 +36,18 @@ export default function DonorDonationsPage() {
   useEffect(() => {
     loadDonations();
   }, []);
+
+  const handleAcceptRequest = async (requestId: string) => {
+    setAcceptingId(requestId);
+    try {
+      await executeGraphQL(ACCEPT_REQUEST_MUTATION, { requestId });
+      await loadDonations();
+    } catch (err: any) {
+      alert(err?.message || 'Failed to accept request');
+    } finally {
+      setAcceptingId(null);
+    }
+  };
 
   useEffect(() => {
     let list = [...donations];
@@ -196,6 +209,47 @@ export default function DonorDonationsPage() {
                           )}
                         </div>
                       </div>
+
+                      {/* Incoming Request Alert & Accept Button */}
+                      {item.currentRequest && (
+                        <div
+                          style={{
+                            width: '100%',
+                            marginTop: '0.75rem',
+                            padding: '0.75rem 1rem',
+                            borderRadius: '8px',
+                            background: item.currentRequest.status === 'PENDING' ? '#fffbeb' : '#f0fdf4',
+                            border: `1px solid ${item.currentRequest.status === 'PENDING' ? '#fde68a' : '#bbf7d0'}`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: '0.75rem',
+                          }}
+                        >
+                          <div style={{ fontSize: '0.8125rem' }}>
+                            <span style={{ fontWeight: 700, color: item.currentRequest.status === 'PENDING' ? '#92400e' : '#166534' }}>
+                              {item.currentRequest.status === 'PENDING' ? '🔔 New Request Received from:' : '✓ Request Accepted for:'}
+                            </span>{' '}
+                            <strong>{item.currentRequest.receiver?.organization || item.currentRequest.receiver?.name}</strong>
+                            <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
+                              • Dropoff: {item.currentRequest.deliveryAddress}
+                            </span>
+                          </div>
+
+                          {item.currentRequest.status === 'PENDING' && (
+                            <button
+                              onClick={() => handleAcceptRequest(item.currentRequest!.id)}
+                              disabled={acceptingId === item.currentRequest.id}
+                              className="btn btn-primary btn-sm"
+                              style={{ background: '#059669', borderColor: '#059669', padding: '0.35rem 0.75rem', fontSize: '0.8125rem' }}
+                            >
+                              <CheckCircle2 size={14} />
+                              <span>{acceptingId === item.currentRequest.id ? 'Accepting...' : 'Accept Request'}</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

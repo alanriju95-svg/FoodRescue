@@ -126,6 +126,51 @@ export class RequestsService {
     return updated;
   }
 
+  async acceptRequest(donorId: string, requestId: string) {
+    const request = await this.prisma.donationRequest.findUnique({
+      where: { id: requestId },
+      include: {
+        donation: true,
+        receiver: true,
+      },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Donation request not found');
+    }
+
+    if (request.donation.donorId !== donorId) {
+      throw new ForbiddenException('You can only accept requests for your own donations');
+    }
+
+    if (request.status !== RequestStatus.PENDING) {
+      throw new BadRequestException(`Cannot accept request: status is currently ${request.status}`);
+    }
+
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.donationRequest.update({
+        where: { id: requestId },
+        data: { status: RequestStatus.APPROVED },
+        include: {
+          receiver: true,
+          donation: {
+            include: {
+              donor: true,
+              requests: { include: { receiver: true } },
+              pickupTasks: { include: { volunteer: true, delivery: true } },
+            },
+          },
+        },
+      }),
+      this.prisma.donation.update({
+        where: { id: request.donationId },
+        data: { status: DonationStatus.REQUESTED },
+      }),
+    ]);
+
+    return updated;
+  }
+
   async getReceiverStats(receiverId: string): Promise<ReceiverStats> {
     const availableFood = await this.prisma.donation.count({
       where: {
@@ -173,5 +218,21 @@ export class RequestsService {
       activeDeliveries,
       completedRequests,
     };
+  }
+
+  async getDonationForRequest(donationId: string) {
+    return this.prisma.donation.findUnique({
+      where: { id: donationId },
+      include: {
+        donor: true,
+        requests: {
+          include: { receiver: true },
+          orderBy: { createdAt: 'desc' },
+        },
+        pickupTasks: {
+          include: { volunteer: true, delivery: true },
+        },
+      },
+    });
   }
 }

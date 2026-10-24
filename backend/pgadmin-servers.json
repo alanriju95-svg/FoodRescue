@@ -1,0 +1,30 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "FoodRescue PostgreSQL",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "foodrescue",
+      "Username": "foodrescue",
+      "Password": "foodrescue_pass",
+      "SSLMode": "prefer",
+      "SSLCert": "",
+      "SSLKey": "",
+      "SSLRootCert": "",
+      "SSLCrl": "",
+      "SSLCompression": 0,
+      "Timeout": 10,
+      "UseSSHTunnel": 0,
+      "TunnelHost": "",
+      "TunnelPort": 22,
+      "TunnelUsername": "",
+      "TunnelAuthentication": 0,
+      "KerberosAuthentication": false,
+      "ConnectionParameters": {
+        "sslmode": "prefer",
+        "connect_timeout": 10
+      }
+    }
+  }
+}

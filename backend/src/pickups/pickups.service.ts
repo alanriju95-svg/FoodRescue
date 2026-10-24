@@ -19,7 +19,7 @@ export class PickupsService {
   async getAvailableTasks() {
     // Donations that are REQUESTED and need a volunteer to transport,
     // or donations that are AVAILABLE for direct volunteer pickup
-    return this.prisma.donation.findMany({
+    const items = await this.prisma.donation.findMany({
       where: {
         status: { in: [DonationStatus.REQUESTED, DonationStatus.AVAILABLE] },
         expiryDeadline: { gt: new Date() },
@@ -36,6 +36,12 @@ export class PickupsService {
         },
       },
     });
+
+    return items.map((item) => ({
+      ...item,
+      currentRequest: item.requests && item.requests.length > 0 ? item.requests[0] : null,
+      currentTask: item.pickupTasks && item.pickupTasks.length > 0 ? item.pickupTasks[0] : null,
+    }));
   }
 
   async getMyTasks(volunteerId: string) {
@@ -364,5 +370,21 @@ export class PickupsService {
       completedPickups,
       todayTasks,
     };
+  }
+
+  async getDonationForTask(donationId: string) {
+    return this.prisma.donation.findUnique({
+      where: { id: donationId },
+      include: {
+        donor: true,
+        requests: {
+          include: { receiver: true },
+          orderBy: { createdAt: 'desc' },
+        },
+        pickupTasks: {
+          include: { volunteer: true, delivery: true },
+        },
+      },
+    });
   }
 }
