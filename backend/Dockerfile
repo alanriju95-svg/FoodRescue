@@ -46,6 +46,10 @@ COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/clie
 # Copy compiled backend output
 COPY --from=builder /app/dist ./dist
 
+# Copy src directory with schema file and ensure nestjs user has full ownership
+COPY --from=builder /app/src ./src
+RUN chown -R nestjs:nodejs /app
+
 USER nestjs
 
 EXPOSE 4000
