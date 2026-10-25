@@ -23,6 +23,21 @@ export async function executeGraphQL<T = any>(
   const json = await res.json();
   if (json.errors && json.errors.length > 0) {
     const message = json.errors[0]?.message || 'GraphQL operation failed';
+    
+    // Auto-clear invalid/stale session tokens (e.g., after switching databases)
+    if (
+      typeof window !== 'undefined' &&
+      (message.includes('User not found or session invalid') ||
+        message.includes('Unauthorized') ||
+        message.toLowerCase().includes('jwt expired'))
+    ) {
+      localStorage.removeItem('foodrescue_token');
+      localStorage.removeItem('foodrescue_user');
+      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/signup')) {
+        window.location.href = '/login?session=expired';
+      }
+    }
+
     throw new Error(message);
   }
 
